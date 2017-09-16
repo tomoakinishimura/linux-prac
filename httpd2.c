@@ -95,6 +95,7 @@ static int listen_socket(char *port);
 static void server_main(int server, char *docroot);
 static void wait_child(int sig);
 static void become_daemon(void);
+static void setup_environment(char *root, char *user, char *group);
 
 /****** Functions ****************************************************/
 int
@@ -139,7 +140,7 @@ main(int argc, char *argv[])
   }
   docroot = argv[optind];
   if(do_chroot){
-    //setup_environment(docroot, user, group);
+    setup_environment(docroot, user, group);
     docroot = "";
   }
   
@@ -155,6 +156,41 @@ main(int argc, char *argv[])
   }
   server_main(server, docroot);
   exit(0);
+}
+
+static void
+setup_environment(char *root, char *user, char *group)
+{
+  struct passwd *pw;
+  struct group *gr;
+
+  if(!user || !group){
+    fprintf(stderr, "use both of --user and --group\n");
+    exit(1);
+  }
+  gr = getgrnam(group);
+  if(!gr){
+    fprintf(stderr, "no such group; %s\n", group);
+    exit(1); 
+  }
+  if(setgid(gr->gr_gid) < 0){
+    perror("setgid(2)");
+    exit(1);
+  }
+  if(initgroups(user, gr->gr_gid) < 0){
+    perror("initgroups(2)");
+    exit(1);
+  }
+  pw = getpwnam(user);
+  if(!pw){
+    fprintf(stderr, "no such user; %s\n", user);
+    exit(1); 
+  }
+  chroot(root);
+  if(setuid(pw->pw_uid) < 0){
+    perror("setuid(2)");
+    exit(1);
+  }
 }
 
 static void
