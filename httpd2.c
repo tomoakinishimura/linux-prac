@@ -93,6 +93,8 @@ static char* guess_content_type(struct FileInfo *info);
 static void upcase(char *str);
 static int listen_socket(char *port);
 static void server_main(int server, char *docroot);
+static void wait_child(int sig);
+static void become_daemon(void);
 
 /****** Functions ****************************************************/
 int
@@ -148,7 +150,8 @@ main(int argc, char *argv[])
   server = listen_socket(port);
   if(!debug_mode){
     //openlog(SERVER_NAME, LOG_PID|LOG_NDELAY, LOG_DAEMON);
-    //become_daemon();
+    //デーモン化
+    become_daemon();
   }
   server_main(server, docroot);
   exit(0);
@@ -212,9 +215,32 @@ listen_socket(char *port)
 }
 
 static void
+become_daemon(void)
+{
+  int n;
+
+  if(chdir("/") < 0)
+    log_exit("chdir(2) failed: %s", strerror(errno));
+  freopen("/dev/null", "r", stdin);
+  freopen("/dev/null", "w", stdout);
+  freopen("/dev/null", "w", stderr);
+  n = fork();
+  if(n < 0) log_exit("fork(2 failed: %s", strerror(errno));
+  if(n != 0) _exit(0);
+  if(setsid() < 0)log_exit("setsid(2) failed: %s", strerror(errno));
+}
+
+static void
 install_signal_handlers(void)
 {
-  trap_signal(SIGPIPE, signal_exit);
+  trap_signal(SIGTERM, signal_exit);
+  trap_signal(SIGCHLD, wait_child);
+}
+
+static void
+wait_child(int sig)
+{
+  wait(NULL);
 }
 
 static void
