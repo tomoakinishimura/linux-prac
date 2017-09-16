@@ -356,7 +356,7 @@ free_fileinfo(struct FileInfo *info)
 static char* 
 guess_content_type(struct FileInfo *info)
 {
-  return "text/plain";
+  return "text/html";
 }
 
 #define TIME_BUF_SIZE 64
