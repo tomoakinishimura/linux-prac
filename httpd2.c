@@ -414,10 +414,11 @@ read_request(FILE *in)
   req->header = NULL;
 
   while(h = read_header_field(in)){
+    fprintf(stdout,"name:%s value:%s\n", h->name, h->value);
     h->next = req->header;
     req->header = h;
   }
-  
+
   req->length = content_length(req);
   if(req->length != 0){
     if(req->length > MAX_REQUEST_BODY_LENGTH) 
