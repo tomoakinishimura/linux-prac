@@ -11,6 +11,6 @@
 
 ```shell
 gcc -o httpd hello2.c
-./httpd --help /* help参照
-./httpd --port=3000 . /* docment rootを指定する。httpd実行ファイルの相対パス。 *
+./httpd --help  # help参照
+./httpd --port=3000 . # docment rootを指定する。httpd実行ファイルの相対パス。
 ```
